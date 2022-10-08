@@ -1,6 +1,6 @@
+bson==0.5.9
 fastapi[all]
 uvicorn[standard]
 jmespath
 pydantic
-bson
 pymongo

@@ -15,8 +15,8 @@ app = FastAPI()
 client = MongoClient(
     host="localhost",
     port=27017,
-    username=os.environ("MONGODB_USER"),
-    password=os.environ("MONGODB_PASS")
+    username=os.environ["MONGODB_USER"],
+    password=os.environ["MONGODB_PASS"]
 )
 db = client.workouts
 
@@ -36,6 +36,8 @@ class PyObjectId(ObjectId):
     def __modify_schema__(cls, field_schema):
         field_schema.update(type="string")
 
+# TODO: Simplify DB management
+
 
 class WorkoutModel(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
@@ -43,7 +45,7 @@ class WorkoutModel(BaseModel):
     workout_type: str = Field(...)
     reps: int = Field(...)
     weight: int = Field(...)
-    date: datetime = datetime.utcnow()
+    date: str = Field(...)
 
     class Config:
         allow_population_by_field_name = True
@@ -93,7 +95,9 @@ async def create_workout(workout: WorkoutModel = Body(...)):
     if workout['workout_type'] not in valid_exercises:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
                             detail=f"{workout['workout_type']} not valid workout type for {workout['muscle_group']}")
-        
+
+    # TO-DO: Fix date recording system
+    workout["date"] = str(datetime.utcnow())
     new_workout = db["workouts"].insert_one(workout)
     created_workout = db["workouts"].find_one({"_id": new_workout.inserted_id})
     return JSONResponse(status_code=status.HTTP_201_CREATED, content=created_workout)
